@@ -1,10 +1,11 @@
 import telebot
 import os
-from dotenv import load_dotenv
 
-# .env fayldan tokenni yuklash
-load_dotenv()
+# Railway Variables ichida qo'shilgan BOT_TOKEN ni olish
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN o'rnatilmagan. Railway Variables bo'limiga qo'shing.")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
