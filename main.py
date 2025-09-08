@@ -1,6 +1,12 @@
 import telebot
+import os
 
-TOKEN = "YOUR_BOT_TOKEN"
+# Railway Environment Variable dan tokenni olish
+TOKEN = os.getenv("TOKEN")
+
+if not TOKEN or ":" not in TOKEN:
+    raise ValueError("Bot token noto‘g‘ri yoki topilmadi")
+
 bot = telebot.TeleBot(TOKEN)
 
 # Uch tilli matn bazasi
@@ -151,7 +157,6 @@ def menu_handler(message):
         elif message.text == data[lang]["menu"][4]:
             text = data[lang]["contacts"]
 
-        # Har doim oxirida bosh sahifaga qaytish tugmasi
         keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
         keyboard.row(data[lang]["home"])
         bot.send_message(message.chat.id, text, reply_markup=keyboard)
