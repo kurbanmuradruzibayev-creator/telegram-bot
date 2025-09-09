@@ -1,7 +1,7 @@
 import telebot
 import os
 
-# Railway Environment Variable dan tokenni olish
+# Railway Variables dan TOKEN olish
 TOKEN = os.getenv("TOKEN")
 
 if not TOKEN or ":" not in TOKEN:
@@ -164,4 +164,5 @@ def menu_handler(message):
     elif message.text == data[lang]["home"]:
         main_menu(message.chat.id, lang)
 
-bot.polling()
+if __name__ == "__main__":
+    bot.polling(none_stop=True)
