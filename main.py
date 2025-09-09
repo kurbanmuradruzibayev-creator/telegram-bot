@@ -1,191 +1,240 @@
 import telebot
 import os
+import logging
 
-# Railway Variables dan TOKEN olish
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Get TOKEN from environment variables
 TOKEN = os.getenv("TOKEN")
-
 if not TOKEN or ":" not in TOKEN:
-    raise ValueError("Bot token noto'g'ri yoki topilmadi")
+    logging.error("Bot token is invalid or not found")
+    raise ValueError("Bot token noto‘g‘ri yoki topilmadi")
 
+# Initialize bot
 bot = telebot.TeleBot(TOKEN)
 
-# Uch tilli matn bazasi (expanded with extra menu items and placeholders)
+# Multilingual data with sub-items for sections
 data = {
     "uz": {
         "welcome": "⚜️ Cyber University davlat universiteti botiga xush kelibsiz!",
-        "menu": ["👑 Universitet haqida", "💰 Bakalavr", "💸 Magistratura", "💳 Qabul", "🔁 Kontaklar", "📊 Hisobotlar", "📷 QR skaner", "⚙️ Sozlamalar"],
+        "menu": ["👑 Universitet haqida", "💳 Aloqa", "💸 Magistratura", "💰 Bakalavr"],
         "about": "⚙️ Cyber University — O‘zbekistonning raqamli kelajagiga yo‘l ochuvchi zamonaviy oliy ta’lim dargohi.\n\n"
                  "O‘zbekiston Respublikasi Prezidentining 2025-yil 20-yanvardagi PQ–14-sonli qaroriga asosan Cyber University tashkil etildi.\n\n"
                  "Qarorni o‘qing! 🫵 https://lex.uz/uz/docs/-7332592",
-        "bachelor": "🎓 Bakalavriat yo‘nalishlari:\n"
-                    "• Kiberxavfsizlik injiniringi: tarmoq va tizim xavfsizligi\n"
-                    "• Kompyuter injiniringi: sun’iy intellekt\n"
-                    "• Kiberxavfsizlik injiniringi: internet ashyolari xavfsizligi\n"
-                    "• Dasturiy injiniring: amaliy matematika va algoritmlashtirish\n"
-                    "• Yurisprudensiya: kiber huquq\n"
-                    "• Yurisprudensiya: raqamli kriminalistika\n"
-                    "• Menejment: kiberxavfsizlik menejmenti\n"
-                    "• Iqtisodiyot: raqamli iqtisodiyot",
-        "master": "🎓 Magistratura yo‘nalishlari:\n"
-                  "• Axborot xavfsizligi\n"
-                  "• Kiber huquq",
-        "admission": "📌 Qabul tartibi:\n\n"
-                     "Cyber University davlat universiteti ⚜️\n\n"
-                     "Eslatma: Prezidentning PF-81-son Farmoniga muvofiq —\n"
-                     "bakalavriatga qabul jarayoni ikki bosqichda amalga oshiriladi:\n"
-                     "1) Avval test\n"
-                     "2) So‘ng tanlov\n\n"
-                     "Manba: https://lex.uz/uz/docs/-6937332",
-        "contacts": "📞 Kontaktlar:\n\n"
-                    "Telegram: Cyber University rasmiy sahifasi\n"
-                    "🌐 Veb-sayt: csu.uz\n"
-                    "📸 Instagram: instagram.com/csu.uz\n"
-                    "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
-                    "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
-                    "☎️ Murojaatlar uchun: 558885555",
-        "reports": "📊 Hisobotlar: Bu yerda universitet hisobotlari bo'ladi. (Keling, keyinroq qo'shamiz!)",  # Placeholder
-        "qr": "📷 QR skaner: QR kodlarni skanerlash funksiyasi. (Hozircha mavjud emas.)",  # Placeholder
-        "settings": "⚙️ Sozlamalar: Bot sozlamalari. (Keyingi versiyada.)",  # Placeholder
-        "home": "🏠 Bosh sahifa"
+        "contact": "📞 Aloqa:\n\n"
+                   "Telegram: Cyber University rasmiy sahifasi\n"
+                   "🌐 Veb-sayt: csu.uz\n"
+                   "📸 Instagram: instagram.com/csu.uz\n"
+                   "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
+                   "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
+                   "☎️ Murojaatlar uchun: 558885555",
+        "bachelor": {
+            "title": "🎓 Bakalavriat yo‘nalishlari:",
+            "items": [
+                {"name": "Kiberxavfsizlik injiniringi: tarmoq va tizim xavfsizligi", "desc": "Tarmoq va tizim xavfsizligi bo‘yicha mutaxassislar tayyorlash."},
+                {"name": "Kompyuter injiniringi: sun’iy intellekt", "desc": "Sun’iy intellekt va mashinaviy o‘qitish bo‘yicha chuqur bilimlar."},
+                {"name": "Kiberxavfsizlik injiniringi: internet ashyolari xavfsizligi", "desc": "IoT qurilmalarini xavfsizligini ta’minlash."},
+                {"name": "Dasturiy injiniring: amaliy matematika va algoritmlashtirish", "desc": "Algoritmlar va dasturiy ta’minot ishlab chiqish."},
+                {"name": "Yurisprudensiya: kiber huquq", "desc": "Raqamli muhitda huquqiy masalalar bo‘yicha ta’lim."},
+                {"name": "Yurisprudensiya: raqamli kriminalistika", "desc": "Kiberjinoyatlarni tergov qilish bo‘yicha mutaxassislik."},
+                {"name": "Menejment: kiberxavfsizlik menejmenti", "desc": "Kiberxavfsizlikni boshqarish va tashkil qilish."},
+                {"name": "Iqtisodiyot: raqamli iqtisodiyot", "desc": "Raqamli iqtisodiyot va blokcheyn texnologiyalari."}
+            ]
+        },
+        "master": {
+            "title": "🎓 Magistratura yo‘nalishlari:",
+            "items": [
+                {"name": "Axborot xavfsizligi", "desc": "Axborot tizimlarini himoya qilish bo‘yicha chuqur bilimlar."},
+                {"name": "Kiber huquq", "desc": "Raqamli huquq va kiberxavfsizlik qonunchiligi bo‘yicha ta’lim."}
+            ]
+        },
+        "home": "🏠 Bosh sahifa",
+        "back": "⬅️ Orqaga"
     },
     "ru": {
         "welcome": "⚜️ Добро пожаловать в бот Государственного университета Cyber University!",
-        "menu": ["👑 Об университете", "💰 Бакалавриат", "💸 Магистратура", "💳 Прием", "🔁 Контакты", "📊 Отчеты", "📷 QR-сканер", "⚙️ Настройки"],
+        "menu": ["👑 Об университете", "💳 Контакты", "💸 Магистратура", "💰 Бакалавриат"],
         "about": "⚙️ Cyber University — современное высшее учебное заведение, открывающее путь в цифровое будущее Узбекистана.\n\n"
                  "На основании Постановления Президента Республики Узбекистан от 20 января 2025 года №PQ–14 был создан Cyber University.\n\n"
                  "Читайте постановление! 🫵 https://lex.uz/ru/docs/-7332592",
-        "bachelor": "🎓 Направления бакалавриата:\n"
-                    "• Кибербезопасность: защита сетей и систем\n"
-                    "• Компьютерная инженерия: искусственный интеллект\n"
-                    "• Кибербезопасность: безопасность интернета вещей\n"
-                    "• Программная инженерия: прикладная математика и алгоритмы\n"
-                    "• Юриспруденция: киберправо\n"
-                    "• Юриспруденция: цифровая криминалистика\n"
-                    "• Менеджмент: управление кибербезопасностью\n"
-                    "• Экономика: цифровая экономика",
-        "master": "🎓 Магистратура:\n"
-                  "• Информационная безопасность\n"
-                  "• Киберправо",
-        "admission": "📌 Прием:\n\n"
-                     "Cyber University ⚜️\n\n"
-                     "Согласно Указу Президента №PF-81 прием в бакалавриат осуществляется в два этапа:\n"
-                     "1) Сначала тест\n"
-                     "2) Затем конкурс\n\n"
-                     "Источник: https://lex.uz/ru/docs/-6937332",
-        "contacts": "📞 Контакты:\n\n"
-                    "Telegram: официальный канал Cyber University\n"
-                    "🌐 Сайт: csu.uz\n"
-                    "📸 Instagram: instagram.com/csu.uz\n"
-                    "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
-                    "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
-                    "☎️ Телефон: 558885555",
-        "reports": "📊 Отчеты: Здесь будут отчеты университета. (Добавим позже!)",  # Placeholder
-        "qr": "📷 QR-сканер: Функция сканирования QR-кодов. (Пока недоступна.)",  # Placeholder
-        "settings": "⚙️ Настройки: Настройки бота. (В следующей версии.)",  # Placeholder
-        "home": "🏠 На главную"
+        "contact": "📞 Контакты:\n\n"
+                   "Telegram: официальный канал Cyber University\n"
+                   "🌐 Сайт: csu.uz\n"
+                   "📸 Instagram: instagram.com/csu.uz\n"
+                   "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
+                   "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
+                   "☎️ Телефон: 558885555",
+        "bachelor": {
+            "title": "🎓 Направления бакалавриата:",
+            "items": [
+                {"name": "Кибербезопасность: защита сетей и систем", "desc": "Подготовка специалистов по защите сетей и систем."},
+                {"name": "Компьютерная инженерия: искусственный интеллект", "desc": "Глубокие знания в области искусственного интеллекта и машинного обучения."},
+                {"name": "Кибербезопасность: безопасность интернета вещей", "desc": "Обеспечение безопасности устройств IoT."},
+                {"name": "Программная инженерия: прикладная математика и алгоритмы", "desc": "Алгоритмы и разработка программного обеспечения."},
+                {"name": "Юриспруденция: киберправо", "desc": "Обучение правовым аспектам цифровой среды."},
+                {"name": "Юриспруденция: цифровая криминалистика", "desc": "Специализация по расследованию киберпреступлений."},
+                {"name": "Менеджмент: управление кибербезопасностью", "desc": "Управление и организация кибербезопасности."},
+                {"name": "Экономика: цифровая экономика", "desc": "Цифровая экономика и технологии блокчейн."}
+            ]
+        },
+        "master": {
+            "title": "🎓 Магистратура:",
+            "items": [
+                {"name": "Информационная безопасность", "desc": "Глубокие знания по защите информационных систем."},
+                {"name": "Киберправо", "desc": "Обучение законодательству в области кибербезопасности."}
+            ]
+        },
+        "home": "🏠 На главную",
+        "back": "⬅️ Назад"
     },
     "en": {
         "welcome": "⚜️ Welcome to Cyber University State University bot!",
-        "menu": ["👑 About University", "💰 Bachelor Programs", "💸 Master Programs", "💳 Admission", "🔁 Contacts", "📊 Reports", "📷 QR Scanner", "⚙️ Settings"],
+        "menu": ["👑 About University", "💳 Contact", "💸 Master Programs", "💰 Bachelor Programs"],
         "about": "⚙️ Cyber University — a modern higher education institution opening the way to Uzbekistan's digital future.\n\n"
                  "Cyber University was established based on the Presidential Decree of the Republic of Uzbekistan No. PQ–14, dated January 20, 2025.\n\n"
                  "Read the decree! 🫵 https://lex.uz/en/docs/-7332592",
-        "bachelor": "🎓 Bachelor Programs:\n"
-                    "• Cybersecurity Engineering: network and system security\n"
-                    "• Computer Engineering: artificial intelligence\n"
-                    "• Cybersecurity Engineering: IoT security\n"
-                    "• Software Engineering: applied mathematics and algorithms\n"
-                    "• Law: cyber law\n"
-                    "• Law: digital forensics\n"
-                    "• Management: cybersecurity management\n"
-                    "• Economics: digital economy",
-        "master": "🎓 Master Programs:\n"
-                  "• Information Security\n"
-                  "• Cyber Law",
-        "admission": "📌 Admission:\n\n"
-                     "Cyber University ⚜️\n\n"
-                     "According to Presidential Decree PF-81, admission to bachelor’s programs is carried out in two stages:\n"
-                     "1) First test\n"
-                     "2) Then selection\n\n"
-                     "Source: https://lex.uz/en/docs/-6937332",
-        "contacts": "📞 Contacts:\n\n"
-                    "Telegram: official Cyber University channel\n"
-                    "🌐 Website: csu.uz\n"
-                    "📸 Instagram: instagram.com/csu.uz\n"
-                    "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
-                    "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
-                    "☎️ Phone: 558885555",
-        "reports": "📊 Reports: University reports will be here. (We'll add later!)",  # Placeholder
-        "qr": "📷 QR Scanner: QR code scanning feature. (Not available yet.)",  # Placeholder
-        "settings": "⚙️ Settings: Bot settings. (In the next version.)",  # Placeholder
-        "home": "🏠 Home"
+        "contact": "📞 Contact:\n\n"
+                   "Telegram: official Cyber University channel\n"
+                   "🌐 Website: csu.uz\n"
+                   "📸 Instagram: instagram.com/csu.uz\n"
+                   "📘 Facebook: www.facebook.com/profile.php?id=61577521082631\n"
+                   "💼 LinkedIn: www.linkedin.com/company/csu_uz/\n"
+                   "☎️ Phone: 558885555",
+        "bachelor": {
+            "title": "🎓 Bachelor Programs:",
+            "items": [
+                {"name": "Cybersecurity Engineering: network and system security", "desc": "Training specialists in network and system security."},
+                {"name": "Computer Engineering: artificial intelligence", "desc": "In-depth knowledge in artificial intelligence and machine learning."},
+                {"name": "Cybersecurity Engineering: IoT security", "desc": "Ensuring the security of IoT devices."},
+                {"name": "Software Engineering: applied mathematics and algorithms", "desc": "Algorithms and software development."},
+                {"name": "Law: cyber law", "desc": "Education on legal aspects of the digital environment."},
+                {"name": "Law: digital forensics", "desc": "Specialization in investigating cybercrimes."},
+                {"name": "Management: cybersecurity management", "desc": "Managing and organizing cybersecurity."},
+                {"name": "Economics: digital economy", "desc": "Digital economy and blockchain technologies."}
+            ]
+        },
+        "master": {
+            "title": "🎓 Master Programs:",
+            "items": [
+                {"name": "Information Security", "desc": "In-depth knowledge in protecting information systems."},
+                {"name": "Cyber Law", "desc": "Education on cybersecurity legislation."}
+            ]
+        },
+        "home": "🏠 Home",
+        "back": "⬅️ Back"
     }
 }
 
-# Foydalanuvchi tili saqlanadi
-user_lang = {}
+# Store user language and current menu state
+user_state = {}
 
 def main_menu(chat_id, lang):
-    # Create expanded 2-column keyboard to match the original function's layout
+    """Display the main menu in the specified language."""
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    menu_items = data[lang]["menu"]
-    for i in range(0, len(menu_items), 2):
-        if i + 1 < len(menu_items):
-            keyboard.row(menu_items[i], menu_items[i + 1])
-        else:
-            keyboard.row(menu_items[i])  # For odd number of items
+    keyboard.row(data[lang]["menu"][0], data[lang]["menu"][1])  # 👑 Universitet haqida, 💳 Aloqa
+    keyboard.row(data[lang]["menu"][2], data[lang]["menu"][3])  # 💸 Magistratura, 💰 Bakalavr
     bot.send_message(chat_id, data[lang]["welcome"], reply_markup=keyboard)
+    user_state[chat_id] = {"lang": lang, "menu": "main"}
+    logging.info(f"Main menu displayed for chat_id: {chat_id}, lang: {lang}")
+
+def sub_menu(chat_id, lang, section):
+    """Display a sub-menu for sections with multiple items (e.g., bachelor, master)."""
+    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+    for item in data[lang][section]["items"]:
+        keyboard.add(item["name"])
+    keyboard.add(data[lang]["back"])
+    bot.send_message(chat_id, data[lang][section]["title"], reply_markup=keyboard)
+    user_state[chat_id]["menu"] = section
+    logging.info(f"Sub-menu '{section}' displayed for chat_id: {chat_id}")
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    """Handle the /start command to prompt language selection."""
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.row("O‘zbekcha 🇺🇿", "Русский 🇷🇺", "English 🇬🇧")
     bot.send_message(message.chat.id,
                      "Tilni tanlang / Выберите язык / Choose language:",
                      reply_markup=keyboard)
+    logging.info(f"Start command received for chat_id: {message.chat.id}")
 
 @bot.message_handler(func=lambda m: m.text in ["O‘zbekcha 🇺🇿", "Русский 🇷🇺", "English 🇬🇧"])
 def set_language(message):
+    """Set the user's language preference and show the main menu."""
     lang_map = {
         "O‘zbekcha 🇺🇿": "uz",
         "Русский 🇷🇺": "ru",
         "English 🇬🇧": "en"
     }
-    user_lang[message.chat.id] = lang_map[message.text]
-    lang = user_lang[message.chat.id]
-    main_menu(message.chat.id, lang)
+    chat_id = message.chat.id
+    user_state[chat_id] = {"lang": lang_map[message.text], "menu": "main"}
+    main_menu(chat_id, user_state[chat_id]["lang"])
+    logging.info(f"Language set to {user_state[chat_id]['lang']} for chat_id: {chat_id}")
 
 @bot.message_handler(func=lambda m: True)
 def menu_handler(message):
-    lang = user_lang.get(message.chat.id, "uz")
-    menu_items = data[lang]["menu"]
-    
-    if message.text in menu_items:
-        text = ""
-        if "Universitet haqida" in message.text or "Об университете" in message.text or "About University" in message.text:
-            text = data[lang]["about"]
-        elif "Bakalavr" in message.text or "Бакалавриат" in message.text or "Bachelor Programs" in message.text:
-            text = data[lang]["bachelor"]
-        elif "Magistratura" in message.text or "Магистратура" in message.text or "Master Programs" in message.text:
-            text = data[lang]["master"]
-        elif "Qabul" in message.text or "Прием" in message.text or "Admission" in message.text:
-            text = data[lang]["admission"]
-        elif "Kontaklar" in message.text or "Контакты" in message.text or "Contacts" in message.text:
-            text = data[lang]["contacts"]
-        elif "Hisobotlar" in message.text or "Отчеты" in message.text or "Reports" in message.text:
-            text = data[lang]["reports"]
-        elif "QR skaner" in message.text or "QR-сканер" in message.text or "QR Scanner" in message.text:
-            text = data[lang]["qr"]
-        elif "Sozlamalar" in message.text or "Настройки" in message.text or "Settings" in message.text:
-            text = data[lang]["settings"]
+    """Handle menu and sub-menu selections."""
+    chat_id = message.chat.id
+    if chat_id not in user_state:
+        start(message)
+        return
 
-        keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-        keyboard.row(data[lang]["home"])
-        bot.send_message(message.chat.id, text, reply_markup=keyboard)
+    lang = user_state[chat_id]["lang"]
+    current_menu = user_state[chat_id]["menu"]
 
-    elif message.text == data[lang]["home"]:
-        main_menu(message.chat.id, lang)
+    # Handle main menu selections
+    if current_menu == "main":
+        if message.text in data[lang]["menu"]:
+            if message.text == data[lang]["menu"][0]:  # About
+                bot.send_message(chat_id, data[lang]["about"], reply_markup=create_back_keyboard(lang))
+                user_state[chat_id]["menu"] = "about"
+            elif message.text == data[lang]["menu"][1]:  # Contact
+                bot.send_message(chat_id, data[lang]["contact"], reply_markup=create_back_keyboard(lang))
+                user_state[chat_id]["menu"] = "contact"
+            elif message.text == data[lang]["menu"][2]:  # Master
+                sub_menu(chat_id, lang, "master")
+            elif message.text == data[lang]["menu"][3]:  # Bachelor
+                sub_menu(chat_id, lang, "bachelor")
+            logging.info(f"Main menu item '{message.text}' selected for chat_id: {chat_id}")
+        else:
+            send_invalid_input_message(chat_id, lang)
+    # Handle sub-menu selections
+    elif current_menu in ["bachelor", "master"]:
+        for item in data[lang][current_menu]["items"]:
+            if message.text == item["name"]:
+                bot.send_message(chat_id, f"{item['name']}:\n{item['desc']}", reply_markup=create_back_keyboard(lang))
+                logging.info(f"Sub-menu item '{message.text}' selected for chat_id: {chat_id}")
+                return
+        if message.text == data[lang]["back"]:
+            main_menu(chat_id, lang)
+        else:
+            send_invalid_input_message(chat_id, lang)
+    # Handle back navigation
+    elif message.text == data[lang]["back"]:
+        main_menu(chat_id, lang)
+    else:
+        send_invalid_input_message(chat_id, lang)
+
+def create_back_keyboard(lang):
+    """Create a keyboard with a single Back button."""
+    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(data[lang]["back"])
+    return keyboard
+
+def send_invalid_input_message(chat_id, lang):
+    """Send a message for invalid input."""
+    messages = {
+        "uz": "Iltimos, menyudan biror variantni tanlang.",
+        "ru": "Пожалуйста, выберите вариант из меню.",
+        "en": "Please select an option from the menu."
+    }
+    bot.send_message(chat_id, messages[lang])
+    logging.warning(f"Invalid input received: {messages[lang]} from chat_id: {chat_id}")
 
 if __name__ == "__main__":
-    print("Bot ishga tushmoqda...")  # Debug print
-    bot.polling(none_stop=True)
+    try:
+        logging.info("Starting bot polling...")
+        bot.polling(none_stop=True)
+    except Exception as e:
+        logging.error(f"Bot polling failed: {str(e)}")
+        raise
