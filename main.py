@@ -6,15 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
-# Keyboard konstantalari
-MAIN_MENU, COURSES, CONTACT, ABOUT = range(4)
+# Konstanta sifatida joylashuv
+LOCATION = "📍 Joylashuv: Universitet Toshkent viloyati, Nurafshon shahri."
 
 # Asosiy keyboard
 def main_keyboard():
     keyboard = [
         [KeyboardButton("🎓 Ta'lim yo'nalishlari"), KeyboardButton("ℹ️ Universitet haqida")],
         [KeyboardButton("📞 Aloqa", request_contact=True), KeyboardButton("📍 Manzil", request_location=True)],
-        [KeyboardButton("💰 Grantlar"), KeyboardButton("🌐 Xalqaro hamkorlik")]
+        [KeyboardButton("💰 Grantlar"), KeyboardButton("🌐 Xalqaro hamkorlik")],
+        [KeyboardButton("🚗 Qanday borish mumkin?")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, input_field_placeholder="Quyidagilardan birini tanlang...")
 
@@ -28,10 +29,98 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_keyboard()
     )
 
-# Universitet haqida
+# Joylashuv haqida ma'lumot
+async def show_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    location_text = f"""
+{LOCATION}
+
+**Tafsilotlar:**
+🏛️ **Binolar:** Zamonaviy o'quv binolari
+💻 **Labaratoriyalar:** Ilg'or kompyuter labaratoriyalari
+📚 **Kutubxona:** Raqamli kutubxona
+🏋️ **Sport majmuasi:** Sport zallari
+🍽️ **Oshxona:** To'liq oziq-ovqat xizmati
+
+**Atrof-muhit:**
+- Shahar markaziga yaqin
+- Transport aloqasi qulay
+- Yashil va osoyishta hudud
+- Zamonaviy infratuzilma
+"""
+    await update.message.reply_text(location_text, reply_markup=main_keyboard())
+
+# Qanday borish mumkin
+async def how_to_get(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    directions_text = f"""
+{LOCATION}
+
+**🚗 Avtomobil orqali:**
+- Toshkent shahridan - 30-40 daqiqa
+- Halq yo'nalishi bo'yicha
+- Nurafshon shahri markaziga yaqin
+
+**🚌 Jamoat transporti:**
+- Toshkent markazidan avtobuslar
+- Shahar ichidagi marshrut taksilar
+- Taksi xizmatlari (Yandex, MyTaxi)
+
+**📍 Navigatsiya:**
+- Google Maps: "Cyber University Nurafshon"
+- Yandex Maps: "Cyber University"
+- 2GIS: "Cyber University"
+
+**📞 Aloqa:**
+- Telefon: +998 XX XXX XX XX
+- Telegram: @cyberuni_uz
+- Email: info@cyberuni.uz
+"""
+    await update.message.reply_text(directions_text, reply_markup=main_keyboard())
+
+# Foydalanuvchi lokatsiyasini qabul qilish
+async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_location = update.message.location
+    user = update.message.from_user
+    
+    # Foydalanuvchi lokatsiyasiga asoslangan masofa va yo'nalish
+    response_text = f"""
+📍 **Sizning joylashuvingiz qabul qilindi!**
+
+{LOCATION}
+
+**Sizga qulay yo'nalishlar:**
+- 🚗 Taksi bilan: 15-25 daqiqa
+- 🚌 Jamoat transporti: 30-40 daqiqa
+- 🚶 Piyoda: 1-1.5 soat
+
+**Masofani aniq bilish uchun:**
+Google Maps yoki Yandex Maps dan foydalaning:
+
+🗺️ **Google Maps:** 
+https://maps.google.com/?q=Nurafshon+Cyber+University
+
+🗺️ **Yandex Maps:**
+https://yandex.com/maps/?text=Cyber+University+Nurafshon
+
+📱 **Navigatsiya ilovalari:**
+- Google Maps
+- Yandex Navigator
+- 2GIS
+"""
+    await update.message.reply_text(response_text, reply_markup=main_keyboard())
+    
+    # Universitetning taxminiy lokatsiyasini yuborish (opsional)
+    # await update.message.reply_location(
+    #     latitude=41.0,  # Nurafshon taxminiy kordinatalari
+    #     longitude=69.0,
+    #     reply_markup=main_keyboard()
+    # )
+
+# Universitet haqida ma'lumot (joylashuvni ham qo'shamiz)
 async def about_university(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """
+    text = f"""
 🏫 **Cyber University** - O'zbekistonning raqamli kelajagi
+
+{LOCATION}
 
 🎯 **Asosiy maqsad:** 
 Kiberxavfsizlik sohasida xalqaro darajada raqobatbardosh mutaxassislar tayyorlash
@@ -40,165 +129,13 @@ Kiberxavfsizlik sohasida xalqaro darajada raqobatbardosh mutaxassislar tayyorlas
 ⏳ **Muddat:** 1 yil Foundation + 3 yil asosiy ta'lim
 🎓 **Kredit-modul tizimi**
 
-📍 **Manzil:** Toshkent viloyati, Nurafshon shahri
-    """
-    await update.message.reply_text(text, reply_markup=main_keyboard())
-
-# Ta'lim yo'nalishlari keyboard
-def courses_keyboard():
-    keyboard = [
-        [KeyboardButton("🔐 Kiberxavfsizlik"), KeyboardButton("💻 Kompyuter injiniringi")],
-        [KeyboardButton("🖥️ Dasturiy injiniring"), KeyboardButton("⚖️ Yurisprudensiya")],
-        [KeyboardButton("📊 Menejment"), KeyboardButton("💼 Iqtisodiyot")],
-        [KeyboardButton("🔙 Asosiy menyu")]
-    ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-# Ta'lim yo'nalishlari
-async def show_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Quyidagi ta'lim yo'nalishlaridan birini tanlang:",
-        reply_markup=courses_keyboard()
-    )
-
-# Har bir kurs haqida ma'lumot
-async def course_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    course = update.message.text
-    info = ""
-    
-    if course == "🔐 Kiberxavfsizlik":
-        info = """
-🔐 **Kiberxavfsizlik injiniringi**
-
-📖 **Asosiy fanlar:**
-- Tarmoq xavfsizligi
-- Ma'lumotlar bazasi himoyasi
-- Kriptografiya
-- Kiberhujumlarni aniqlash va oldini olish
-
-💼 **Ish joylari:**
-- Bank va moliya institutlari
-- Davlat idoralari
-- IT kompaniyalar
-- Telekommunikasyon kompaniyalari
-        """
-    elif course == "💻 Kompyuter injiniringi":
-        info = """
-💻 **Kompyuter injiniringi**
-
-📖 **Asosiy fanlar:**
-- Kompyuter arxitekturasi
-- Operatsion tizimlar
-- Mikroprotsessorlar
-- Mobil qurilmalar
-
-💼 **Ish joylari:**
-- Elektronika korxonalari
-- Telekommunikasyon
-- IT kompaniyalar
-- Ishlab chiqarish korxonalari
-        """
-    elif course == "🖥️ Dasturiy injiniring":
-        info = """
-🖥️ **Dasturiy injiniring**
-
-📖 **Asosiy fanlar:**
-- Web dasturlash
-- Mobil ilovalar
-- Sun'iy intellekt
-- Ma'lumotlar tahlili
-
-💼 **Ish joylari:**
-- Dasturiy ta'minot kompaniyalari
-- Startuplar
-- Bank va moliya
-- Turli soha korxonalari
-        """
-    elif course == "⚖️ Yurisprudensiya":
-        info = """
-⚖️ **Yurisprudensiya**
-
-📖 **Asosiy fanlar:**
-- Axborot huquqi
-- Kiberhuquq
-- Intellektual mulk
-- Raqamli iqtisod huquqi
-
-💼 **Ish joylari:**
-- Sud tizimi
-- Advokatlik
-- Korporativ huquq
-- Davlat idoralari
-        """
-    elif course == "📊 Menejment":
-        info = """
-📊 **Menejment**
-
-📖 **Asosiy fanlar:**
-- IT loyihalar boshqaruvi
-- Biznes tahlili
-- Raqamli marketing
-- Strategik menejment
-
-💼 **Ish joylari:**
-- Menejment konsalting
-- IT kompaniyalar
-- Bank va moliya
-- Ishlab chiqarish korxonalari
-        """
-    elif course == "💼 Iqtisodiyot":
-        info = """
-💼 **Iqtisodiyot**
-
-📖 **Asosiy fanlar:**
-- Raqamli iqtisod
-- Kripto iqtisod
-- Fintech
-- Makroiqtisod
-
-💼 **Ish joylari:**
-- Bank va moliya
-- Investitsiya kompaniyalari
-- Davlat idoralari
-- Xalqaro tashkilotlar
-        """
-    
-    if info:
-        await update.message.reply_text(info, reply_markup=courses_keyboard())
-
-# Grantlar haqida
-async def show_grants(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """
-💰 **Grant va stipendiyalar:**
-
-🎯 **100 ta davlat granti** - 2025/2026 o'quv yili uchun
-
-🏆 **Sanoat hamkorlari stipendiyalari:**
-- IT kompaniyalar tomonidan
-- Amaliyot vaqtida maosh
-- Ish bilan ta'minlash
-
-📚 **Innovatsion rivojlanish kengashi** stipendiyalari
-    """
-    await update.message.reply_text(text, reply_markup=main_keyboard())
-
-# Xalqaro hamkorlik
-async def show_international(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """
-🌐 **Xalqaro hamkorlik:**
-
-🤝 **Hamkor universitetlar:**
-- AQSH (Stanford, MIT)
-- Xitoy (Tsinghua, Peking)
-- Yaponiya (Tokyo, Kyoto)
-- Janubiy Koreya (KAIST)
-
-🎓 **Imkoniyatlar:**
-- Almashinuv dasturlari
-- Qo'shma loyihalar
-- Xorijiy professorlar
-- Xalqaro sertifikatlar
-    """
+**Infratuzilma:**
+- Zamonaviy o'quv binolari
+- Ilg'or kompyuter labaratoriyalari
+- Raqamli kutubxona
+- Sport majmuasi
+- Talabalar turar joyi
+"""
     await update.message.reply_text(text, reply_markup=main_keyboard())
 
 # Kontakt qabul qilish
@@ -206,22 +143,9 @@ async def contact_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     contact = update.message.contact
     await update.message.reply_text(
         f"Rahmat! Sizning kontaktlaringiz qabul qilindi.\n"
-        f"Telefon: {contact.phone_number}",
-        reply_markup=main_keyboard()
-    )
-
-# Lokatsiya qabul qilish
-async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    location = update.message.location
-    await update.message.reply_text(
-        "Manzilingiz qabul qilindi! Universitet Toshkent viloyati, Nurafshon shahrida joylashgan.",
-        reply_markup=main_keyboard()
-    )
-
-# Asosiy menyuga qaytish
-async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Asosiy menyu:",
+        f"Telefon: {contact.phone_number}\n\n"
+        f"{LOCATION}\n"
+        f"Qo'shimcha ma'lumot uchun: @cyberuni_uz",
         reply_markup=main_keyboard()
     )
 
@@ -237,16 +161,71 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await show_grants(update, context)
     elif text == "🌐 Xalqaro hamkorlik":
         await show_international(update, context)
+    elif text == "📍 Manzil" or text == "🚗 Qanday borish mumkin?":
+        await how_to_get(update, context)
     elif text == "🔙 Asosiy menyu":
         await back_to_main(update, context)
-    elif text in ["🔐 Kiberxavfsizlik", "💻 Kompyuter injiniringi", "🖥️ Dasturiy injiniring", 
-                  "⚖️ Yurisprudensiya", "📊 Menejment", "💼 Iqtisodiyot"]:
-        await course_info(update, context)
     else:
         await update.message.reply_text(
             "Tushunmadim, quyidagi tugmalardan foydalaning:",
             reply_markup=main_keyboard()
         )
+
+# Pastdagi funksiyalarni oldingi koddan qo'shing
+async def show_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Ta'lim yo'nalishlari keyboard
+    def courses_keyboard():
+        keyboard = [
+            [KeyboardButton("🔐 Kiberxavfsizlik"), KeyboardButton("💻 Kompyuter injiniringi")],
+            [KeyboardButton("🖥️ Dasturiy injiniring"), KeyboardButton("⚖️ Yurisprudensiya")],
+            [KeyboardButton("📊 Menejment"), KeyboardButton("💼 Iqtisodiyot")],
+            [KeyboardButton("🔙 Asosiy menyu")]
+        ]
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+    await update.message.reply_text(
+        "Quyidagi ta'lim yo'nalishlaridan birini tanlang:",
+        reply_markup=courses_keyboard()
+    )
+
+async def show_grants(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = """
+💰 **Grant va stipendiyalar:**
+
+🎯 **100 ta davlat granti** - 2025/2026 o'quv yili uchun
+
+🏆 **Sanoat hamkorlari stipendiyalari:**
+- IT kompaniyalar tomonidan
+- Amaliyot vaqtida maosh
+- Ish bilan ta'minlash
+
+📚 **Innovatsion rivojlanish kengashi** stipendiyalari
+"""
+    await update.message.reply_text(text, reply_markup=main_keyboard())
+
+async def show_international(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = """
+🌐 **Xalqaro hamkorlik:**
+
+🤝 **Hamkor universitetlar:**
+- AQSH (Stanford, MIT)
+- Xitoy (Tsinghua, Peking)
+- Yaponiya (Tokyo, Kyoto)
+- Janubiy Koreya (KAIST)
+
+🎓 **Imkoniyatlar:**
+- Almashinuv dasturlari
+- Qo'shma loyihalar
+- Xorijiy professorlar
+- Xalqaro sertifikatlar
+"""
+    await update.message.reply_text(text, reply_markup=main_keyboard())
+
+async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Asosiy menyu:",
+        reply_markup=main_keyboard()
+    )
 
 def main():
     if not BOT_TOKEN:
